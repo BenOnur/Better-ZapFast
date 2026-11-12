@@ -12,7 +12,7 @@ On Linux:
 
 | What | Where | Notes |
 | --- | --- | --- |
-| Settings | `~/.config/zapfast/settings.json` | JSON, safe to edit; the app lock password and the locked-chats code are kept only as salted verifiers |
+| Settings | `~/.config/zapfast/settings.json` | JSON, safe to edit, or declared with the [Home Manager module](/download/); the app lock password and the locked-chats code are kept only as salted verifiers |
 | Account list | `~/.config/zapfast/accounts.json` | Which numbers are linked here and which one is showing |
 | Session keys | `~/.local/state/zapfast/accounts/<id>/session.db` | Deleting it unlinks that number |
 | Message archive | `~/.local/state/zapfast/accounts/<id>/archive.db` | Encrypted; the only copy of history WhatsApp will not send again |
@@ -21,19 +21,39 @@ On Linux:
 | Wallpaper image | `~/.local/state/zapfast/accounts/<id>/wallpaper.jpg` | Copy of the chosen picture (or `.png`, `.webp`, `.gif`) |
 | Attachments, avatars | `~/.cache/zapfast/accounts/<id>/` | Safe to delete; available files download again when viewed |
 | Last run's log | `~/.local/state/zapfast/zapfast.log` | `--verbose` for more |
+| The run before's log | `~/.local/state/zapfast/zapfast.previous.log` | Kept for one more start |
 | Crash log | `~/.local/state/zapfast/panic.log` | Safe to delete |
 
 Back up the archive if you need its history. WhatsApp sends only recent
 history to a new device, although ZapFast can request some older messages from
 the phone. Clearing the media cache makes ZapFast download attachments again.
 Expired attachments may still be available through the phone.
+If a downloaded file has gone when you try to open it, ZapFast says so and its
+message offers the download again, without a restart.
+A download is reported as complete only after its local path is recorded in
+the archive. If that write fails, the attachment shows a failure instead;
+the downloaded file is kept in its destination.
 **Settings > Files > Storage used** shows how much space the account on screen
 has in its media cache, split into images, videos and GIFs, stickers, and other
 files. **Clear…** there deletes that account's cached attachments after asking:
 its messages, its other caches, and the other accounts' files stay, and so do
 files in a download folder you chose.
 **Settings > Files > Change…** sends new downloads to another folder, leaving
-earlier ones in place. There, documents keep the name they were sent with; a
+earlier ones in place. New downloads use one fixed layout inside that folder:
+`<account>/<chat name>/file`, where the account folder is the account's phone
+number, such as `+15550001111` (`Account 1` until the number is known). Chat
+names stay readable, with filesystem-unsafe characters replaced and long names
+shortened. When two chats of one account would share a folder, the first keeps
+it and the others become `Name (2)`, `Name (3)`, and so on; each chat keeps its
+folder. New downloads use the current name; existing files are not moved.
+The downloaded file itself goes there, without a second copy in the cache.
+If the destination is unavailable, downloads fall back to the account's normal
+cache as before. This also applies when the folder cannot accept new files or
+publishing the downloaded file fails. Restarting removes unfinished downloads
+from that account's chat folders, without following linked folders.
+If an account or chat folder is a symbolic link, new downloads use the cache
+instead.
+Documents keep the name they were sent with; a
 file already in the folder is never replaced, and the download becomes
 `name (1).pdf`, `name (2).pdf`, and so on. Characters a file system refuses
 become `_`.
@@ -52,7 +72,9 @@ Quit FastsApp first; launching ZapFast while it is running brings the existing
 window forward. A single-number setup from before 0.19 moves into
 `accounts/1/` on first start, keyring key included; if that cannot finish (a
 locked keyring, or a folder already in the way), ZapFast stops without moving
-anything and says why in its log.
+anything and says why in its log. If `accounts/1/` already holds a linked
+session, ZapFast uses it and leaves any older files beside it alone; an older
+ZapFast still installed can leave such files.
 
 On Linux and macOS, ZapFast restricts its configuration, state, and cache
 directories to your user (`0700`) and stops at startup if it cannot. Windows
@@ -110,7 +132,8 @@ name or description, in the interface language or in English.
   where an unblurred desktop behind the sidebar would cost its text
   contrast, and in a window opened before choosing it on Windows or Linux,
   the window is opaque in the theme's colours; it turns translucent from
-  the next window.
+  the next window. On macOS, changing between an opaque and translucent
+  theme replaces the window while keeping the current chat and connection.
 - **Wallpaper**: WhatsApp's light and dark chat wallpaper colours, with or
   without doodles.
 - **Zoom**: interface scale, also `Ctrl+Plus`, `Ctrl+Minus` and `Ctrl+0`.
@@ -140,15 +163,23 @@ name or description, in the interface language or in English.
 - **Fetch older history**: off by default, and set for
   each number. When on, ZapFast asks the phone for older messages without you
   scrolling: the open chat first, then pinned chats and the ten most recently
-  active ones (never channels). It sends at most one request every twenty
-  seconds, and only while no other history request is waiting. Each chat is
+  active ones (never channels). It sends at most one request every five
+  minutes, since each one wakes the phone, and only while no other history request is waiting. Each chat is
   asked for at most five pages each time ZapFast runs, and a chat the phone
-  does not answer goes to the back of the queue. Pages fetched this way go into
-  the archive without moving the view. A chat the phone says has nothing older
-  is not asked again.
-- **Keep chats archived** (development builds): on by default. When off, a new
-  message, received or sent, brings an archived chat back to the list. Applies
-  to all accounts here; it does not read or change the phone's own setting.
+  does not answer goes to the back of the queue. Unanswered requests back off
+  for that chat only; other chats keep the normal twenty-second gap. After
+  three unanswered requests in a row, that chat's background recovery pauses
+  until one of those requests gets a late reply, or ZapFast reconnects or
+  restarts. This does not mark history complete or prevent manual requests.
+  A matched background reply resets that chat's timeout count, even if late.
+  Requests that cannot be sent still back off the whole account. Pages fetched
+  this way go into the archive without moving the view. A chat the phone says
+  has nothing older is not asked again.
+- **Keep chats archived**: on by default. When off, a new message, received or
+  sent, brings an archived chat back to the list. Applies to all accounts here
+  whose phone has not sent its own **Keep chats archived**; once a phone has,
+  ZapFast follows the phone for that account. It does not change the phone's
+  setting.
 - **Pause other media while recording or playing**: pause music and videos in
   other apps while you record, or while a voice message, audio, or video plays
   with sound, and resume them afterwards. Linux and Windows only.
@@ -158,7 +189,8 @@ name or description, in the interface language or in English.
 **Notifications**
 
 - **Desktop notifications**: for chats you are not looking at. Muted chats stay
-  quiet.
+  quiet. The bell beside each number in the account switcher turns the same
+  setting off and on for that number without switching to it.
 - **Show message content in notifications**: on by default. When off, every
   notification says only "New message" from ZapFast, without the chat, the
   sender, the text, or a picture, as behind the app lock, and plays only the
@@ -188,11 +220,15 @@ name or description, in the interface language or in English.
 - **Last seen**, **Online**, **Profile photo**, **About**, **Groups**, **Read
   receipts**, **Calls**: your WhatsApp account privacy, stored on WhatsApp's
   servers and shared with your phone. They can be changed while connected.
+- **Blocked contacts**: view your WhatsApp account’s blocked contacts and unblock
+  them, including people without a local chat. Changes require a connection.
 - **App lock**: hide ZapFast behind a password. See [App lock](#app-lock).
 
 **System**
 
 - **Keep running when the window closes**: keep ZapFast linked in the tray.
+  With this off ZapFast has no tray or menu bar icon; an icon already there
+  leaves at the next start.
 - **Start at login**: start in the tray without a window, where the platform
   supports it. If the desktop's tray is not up yet, ZapFast waits up to 30
   seconds for it, then opens the window, since a desktop without a tray could
@@ -204,14 +240,14 @@ name or description, in the interface language or in English.
   background; restarting stays your choice. Package managers and Flatpak update
   ZapFast themselves.
 - **Proxy**: for the WhatsApp connection, media, profile pictures, GIF search,
-  Signal sticker imports, and update checks. It accepts `socks5h://host:port`
-  (the proxy resolves names, as Tor expects), `socks5://host:port`, and
-  `http://host:port`, each with an optional `user:password@`; a bare
-  `host:port` is an HTTP proxy. Changing it reconnects at once. Empty uses
-  `ALL_PROXY` or `HTTPS_PROXY` from the environment and honors `NO_PROXY`.
-  A call's signaling goes through the proxy, but its audio and video do not:
-  they travel over UDP straight to WhatsApp's call relays, which see this
-  computer's address.
+  Signal sticker imports, link previews for the messages you write, and update
+  checks. It accepts `socks5h://host:port` (the proxy resolves names, as Tor
+  expects), `socks5://host:port`, and `http://host:port`, each with an optional
+  `user:password@`; a bare `host:port` is an HTTP proxy. Changing it reconnects
+  at once. Empty uses `ALL_PROXY` or `HTTPS_PROXY` from the environment and
+  honors `NO_PROXY`. A call's signaling goes through the proxy, but its audio
+  and video do not: they travel over UDP straight to WhatsApp's call relays,
+  which see this computer's address.
 - **GIPHY API key**: for GIF search, unless the build includes one. Set
   `ZAPFAST_GIPHY_KEY` at compile time to include a default key. The earlier
   `FASTSAPP_GIPHY_KEY` remains a fallback for existing builds.
@@ -286,9 +322,11 @@ the new one.
 
 ## The log
 
-Each run replaces `zapfast.log` and records warnings and errors, never
+Each run starts `zapfast.log` afresh and records warnings and errors, never
 message contents, phone numbers, or keys. Include the end of this file when
-reporting an issue. **Settings > Files > Log > Open** shows it.
+reporting an issue. **Settings > Files > Log > Open** shows it. The run before
+is kept beside it as `zapfast.previous.log`: if ZapFast froze and you had to
+restart it, that file holds what happened.
 
 During a call the log also records the call's numbers every few seconds: the
 video rate, loss and keyframes in each direction, and the audio devices'
@@ -320,3 +358,16 @@ For this fork's local extension files and update channel, see [Local plugins](..
 Nothing is written without the variable. The files are both people's voices,
 so only set it for a call whose other side agreed, and delete the files when
 you are done.
+
+## Chat exports
+
+Choose **Export chat…** from a conversation's menu to save all of its locally
+stored messages as a UTF-8 text file. **Include downloaded attachments (ZIP)**
+adds the existing files and `_chat.txt` to one ZIP. The text uses UTC timestamps
+and preserves multiline messages and captions. Missing attachments are listed as
+unavailable; this never downloads files or requests older history from the phone.
+
+Exports are unencrypted. Locked chats cannot be exported. Cancel stops the job;
+locking the app, clearing/deleting the chat or unlinking the account also cancels
+it. A cancelled or failed export removes its partial files and preserves an
+existing destination. Completed exports remain where you chose to save them.
