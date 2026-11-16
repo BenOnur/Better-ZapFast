@@ -1,153 +1,124 @@
-This fork adds [local file plugins](docs/local-plugins.md). Plugin-enabled Windows packages come from [Better-ZapFast releases](https://github.com/BenOnur/Better-ZapFast/releases/latest); stock upstream packages do not contain the extension host.
-
-**Anti-Delete, Auto Responder, Notification Throttle, Quoter, Quick Stickers and bugfix** have a [separate repository, individual downloads and installation guide](https://github.com/BenOnur/zapfast-plugins). The first four work with fork v0.19.1 / API v2; Quick Stickers and current bugfix require the newer API v3 hooks documented there.
-
 <p align="center">
-  <img src="docs/assets/images/logo.svg" alt="ZapFast logo" width="88" height="88">
+  <img src="docs/assets/images/logo.svg" alt="Better-ZapFast logo" width="80" height="80">
 </p>
 
-<h1 align="center">ZapFast</h1>
-
-<p align="center"><strong>WhatsApp, native and fast.</strong><br>A lightweight WhatsApp app for Linux, macOS, and Windows.</p>
+<h1 align="center">Better-ZapFast</h1>
 
 <p align="center">
-  <a href="https://zapfast.rocks/download/"><strong>Download</strong></a> ·
-  <a href="https://zapfast.rocks/getting-started/">Getting started</a> ·
-  <a href="https://zapfast.rocks/using-zapfast/">User guide</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <strong>Native, blazingly fast WhatsApp desktop client with an extensible Rhai plugin engine.</strong><br>
+  A power-user fork of <a href="https://github.com/crmne/zapfast">ZapFast</a> designed for speed, privacy, and full client-side control.
 </p>
 
 <p align="center">
-  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Built_with-Rust-00a884" alt="Built with Rust"></a>
-  <a href="https://zapfast.rocks/download/"><img src="https://img.shields.io/badge/Linux_%C2%B7_macOS_%C2%B7_Windows-24292f" alt="Linux, macOS, and Windows"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00a884" alt="MIT license"></a>
+  <a href="https://github.com/BenOnur/Better-ZapFast/releases/latest"><img src="https://img.shields.io/github/v/release/BenOnur/Better-ZapFast?color=00a884&label=release&style=flat-square" alt="Latest Release"></a>
+  <a href="Cargo.toml"><img src="https://img.shields.io/badge/Rust-2024%20Edition-dea584?style=flat-square&logo=rust&logoColor=white" alt="Built with Rust"></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%20x64-0078d4?style=flat-square&logo=windows&logoColor=white" alt="Windows x64">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-00a884?style=flat-square" alt="MIT License"></a>
+  <a href="https://github.com/BenOnur/zapfast-plugins"><img src="https://img.shields.io/badge/Plugins-Catalog-blueviolet?style=flat-square" alt="Plugin Catalog"></a>
 </p>
 
-ZapFast is a WhatsApp client written in Rust with
-[egui](https://www.egui.rs) and [fastframe](https://fastframe.dev), the
-framework behind a family of native desktop apps. It links to your phone as a
-companion device through
-[whatsapp-rust](https://github.com/oxidezap/whatsapp-rust) and has no browser
-engine. In our Linux test it opens in under a second and uses about 200 MB of
-idle RAM, against 1.13 GB for WhatsApp Web.
-[See the measurements](https://zapfast.rocks/benchmarks/).
+<p align="center">
+  <a href="#key-enhancements">Key Enhancements</a> •
+  <a href="#built-in-plugins">Plugins</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#acknowledgements">Acknowledgements</a>
+</p>
 
-The interface is available in English, Chinese (Simplified and Traditional),
-French, German, Indonesian, Italian, Portuguese (Brazil), Russian, Spanish,
-and Turkish.
+---
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/screenshot-light.png">
-  <img src="docs/screenshot.png" alt="ZapFast showing a conversation with an attachment, voice messages, reactions, a quoted reply, and a link preview">
+  <img src="docs/screenshot.png" alt="Better-ZapFast Interface Preview" width="100%">
 </picture>
 
-<details>
-<summary><strong>Watch ZapFast in action</strong></summary>
+## Overview
 
-https://github.com/user-attachments/assets/2bf86b54-45fc-4add-8de7-c426c3cdad9b
+**Better-ZapFast** extends the lightweight, native architecture of [ZapFast](https://github.com/crmne/zapfast) by embedding an in-app Rhai scripting runtime. It allows you to write, modify, and reload custom client behaviors, layout rules, and message handlers on the fly—without recompiling the binary.
 
-</details>
+Built with Rust, [egui](https://www.egui.rs), and [fastframe](https://fastframe.dev), Better-ZapFast runs with zero browser engine overhead, starting in under a second and using ~200 MB of idle memory (compared to ~1.1 GB in WhatsApp Web / Electron wrappers).
 
-[Features](#your-chats-on-your-desktop) · [Install](#install) · [Link your phone](#link-your-phone) · [Help](#guides-and-help)
+## Key Enhancements
 
-## Your chats, on your desktop
+* **Zero-Rebuild Plugin Architecture**: Modify or add plugins via plain `.rhai` scripts and `.json` manifests under `%APPDATA%\paolino\zapfast\config\plugins`. Hot-reload them anytime from *Settings > Plugins*.
+* **Sandboxed & Safe Scripting**: The Rhai engine enforces strict operational boundaries (25,000 operation execution limit, 128 KiB state quotas, recursion limits, and suppression of log output).
+* **Silent Windows Subsystem**: Configured as a native Windows GUI application—no lingering console windows or development terminal popups.
+* **Deleted Media & Message Retention**: Preserves revoked content locally before WhatsApp deletes it from view.
+* **Granular UI & Interaction Policies**: Full control over composer actions, message selection sweeps, and custom layout dimensions.
 
-| Feature | What you can do |
-|---|---|
-| **Messages** | Send formatted text, replies, edits, reactions, forwards, pictures, files, stickers, GIFs, polls, and voice messages. |
-| **Media in the chat** | Play voice messages, videos, round video messages, GIFs, and animated stickers in place. |
-| **Your history** | Keep your chats in an encrypted archive on this computer, fetch older messages from your phone as you scroll, and export locally saved chat history as text or a ZIP with downloaded attachments. |
-| **Several numbers** | Link more than one WhatsApp number and switch between them in one window. |
-| **Desktop controls** | Use keyboard shortcuts, select and copy text across messages, and stay linked in the tray with notifications. |
-| **Themes** | Choose light, dark, system appearance, or custom colours. On Omarchy, follow your desktop theme. |
-| **Privacy** | Hide locked chats behind a code, or the whole window behind an app lock. Nothing goes to a server of ours. |
+## Built-in Plugins
 
-## Install
+Better-ZapFast ships with support for several modular plugins, also available via the [zapfast-plugins](https://github.com/BenOnur/zapfast-plugins) catalog:
 
-| Platform | Installation |
-|---|---|
-| **macOS** | `brew install --cask crmne/tap/zapfast`, or [download the Mac app](https://zapfast.rocks/download/#macos). |
-| **Arch Linux** | `yay -S zapfast-bin` |
-| **Windows** | Choose your build on the [Download page](https://zapfast.rocks/download/#windows). |
-| **Other Linux** | Find Nix, AppImage, and other options on the [Download page](https://zapfast.rocks/download/#linux). |
-| **From source** | Follow [Getting started](https://zapfast.rocks/getting-started/) for dependencies and commands. |
+| Plugin | Hooks | Description |
+|---|---|---|
+| **Anti-Delete** | `on_before_delete`, `on_cache_media` | Retains deleted messages and proactively caches incoming media attachments (up to 64 MiB). |
+| **Quoter** | `on_context_menu`, `on_card` | Creates Equicord/Discord-style quote cards with high-resolution avatars, dark/light themes, and exportable PNGs. |
+| **Auto Responder** | `on_message` | Listens for configurable `/commands` in selected chats and sends automated replies with adjustable delay timers. |
+| **Notification Throttle** | `on_notification` | Limits notification spam by enforcing a per-sender quiet window (e.g., 30s) across individual contacts. |
+| **Quick Stickers** | `on_composer_tools` | Places a direct sticker picker shortcut immediately next to the emoji button for instant access. |
+| **Bugfix** | `on_layout`, `on_media_policy` | Restores header title expansion on wide windows and enables immediate static sticker previews while animated WebP decodes. |
+| **Quality of Life** | `on_input_policy` | Enforces `Ctrl + Left Click` for multi-message drag selection, preserving standard text selection without accidental sweeping. |
 
-## Link your phone
+## Installation
 
-1. Open ZapFast. It shows a QR code.
-2. On your phone, open WhatsApp, then **Settings**, **Linked devices**,
-   **Link a device**, and scan the code. Or click **Link with phone number**
-   and enter the eight-character code on your phone.
-3. Your recent chats arrive from the phone. Older messages follow as you
-   scroll up.
+### Windows (Pre-built Binaries)
 
-The link survives restarts, and your phone does not need to stay online to
-read what ZapFast has already stored. See
-[Getting started](https://zapfast.rocks/getting-started/) for the full
-walkthrough and [How it links](https://zapfast.rocks/how-it-links/) for the
-details.
+1. Download the latest release archive (`zapfast-v<version>-x86_64-pc-windows-msvc.zip`) from [Releases](https://github.com/BenOnur/Better-ZapFast/releases/latest).
+2. Extract the folder to your preferred application directory (e.g., `D:\Apps\ZapFast` or `C:\Program Files\ZapFast`).
+3. Run `zapfast.exe`. The application operates in portable mode when `zapfast-portable.txt` is present beside the executable.
 
-## Guides and help
+### Building from Source
 
-The complete guide lives at **[zapfast.rocks](https://zapfast.rocks/)**.
-
-| You want to… | Read |
-|---|---|
-| Know what ZapFast does and does not do yet | [What is ZapFast?](https://zapfast.rocks/what-is-zapfast/) |
-| Link your phone or build from source | [Getting started](https://zapfast.rocks/getting-started/) |
-| Learn messages, stickers, polls, and shortcuts | [Using ZapFast](https://zapfast.rocks/using-zapfast/) |
-| Find settings, stored files, encryption, the app lock, and updates | [Settings and files](https://zapfast.rocks/settings-and-files/) |
-| Make your own theme | [Making a theme](https://zapfast.rocks/themes/) |
-| Understand what stays on this computer | [How it links](https://zapfast.rocks/how-it-links/) |
-| Understand account risk | [Account safety](https://zapfast.rocks/what-is-zapfast/#account-safety) |
-| Report a bug or propose a feature | Read [Contributing](CONTRIBUTING.md), then use the [issue forms](https://github.com/crmne/zapfast/issues/new/choose). |
-
-## Contributing
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull
-request. To look at the interface without a WhatsApp account, run:
+Ensure you have a modern Rust toolchain installed:
 
 ```sh
-cargo run --features demo -- --demo
+# Clone repository
+git clone https://github.com/BenOnur/Better-ZapFast.git
+cd Better-ZapFast
+
+# Run tests
+cargo test --locked --all-targets
+
+# Build optimized release binary
+cargo build --locked --release
 ```
 
-[AGENTS.md](AGENTS.md) describes the architecture, [DEMO.md](DEMO.md) the
-demo pages, screenshots, and recorded tours, and
-[PACKAGING.md](PACKAGING.md) releases and packages.
+The resulting binary will be at `target/release/zapfast.exe`.
 
-Native notifications use Fastframe on Linux, macOS and Windows. ZapFast keeps
-its account/chat routing, privacy settings, notification limits and sound
-previews. Clicks open the announced message; reading a chat withdraws its
-tracked notifications. OS permissions and notification presentation still apply.
+## Pairing Your Phone
 
+1. Launch Better-ZapFast. A pairing QR code will be displayed.
+2. On your mobile phone, navigate to **WhatsApp > Settings > Linked Devices > Link a Device**.
+3. Scan the QR code, or select **Link with phone number** and enter the eight-character code.
+4. Your recent chats will stream directly to your local encrypted database.
 
-## More native apps
+*Note: The link survives restarts, and your phone does not need to stay online once local history has synced.*
 
-**Want Spotify just as fast and native?** [Spotifast](https://spotifast.rocks)
-is ZapFast's sibling. Both are built on
-[fastframe](https://fastframe.dev).
+## Plugin Development
+
+Custom plugins live in `%APPDATA%\paolino\zapfast\config\plugins/<plugin_id>/`:
+
+```
+<plugin_id>/
+├── plugin.json    # Manifest defining API version, metadata, settings schema, and hooks
+└── main.rhai      # Rhai script implementing corresponding event handlers
+```
+
+Refer to [docs/local-plugins.md](docs/local-plugins.md) for full API hook definitions, state management, and sample manifests.
 
 ## Acknowledgements
 
-ZapFast uses [whatsapp-rust](https://github.com/oxidezap/whatsapp-rust),
-[egui](https://www.egui.rs), [fastframe](https://fastframe.dev), the
-[Inter](https://rsms.me/inter/) typeface and Noto Color Emoji (OFL), and
-[Lucide](https://lucide.dev) icons (ISC), also used for the chat wallpaper
-doodles. The notification sounds are [Pidgin](https://pidgin.im)'s, under the
-GPL-2.0 (see `assets/sounds/`).
+Better-ZapFast is a fork of [ZapFast](https://github.com/crmne/zapfast), originally created by **[Carmine Paolino](https://github.com/crmne)**.
 
-ZapFast is an unofficial client and is not affiliated with WhatsApp or Meta.
-Using an unofficial client may be against WhatsApp's terms of service and
-could get an account suspended. Use it at your own risk. WhatsApp is a
-trademark of WhatsApp LLC.
+* Upstream project: [crmne/zapfast](https://github.com/crmne/zapfast)
+* Official project website: [zapfast.rocks](https://zapfast.rocks)
+* WhatsApp protocol engine: [whatsapp-rust](https://github.com/oxidezap/whatsapp-rust)
+* UI & framework: [egui](https://github.com/emilk/egui) & [fastframe](https://fastframe.dev)
+* Typography & Assets: [Inter](https://rsms.me/inter/) font, Noto Color Emoji (OFL), and [Lucide](https://lucide.dev) icons.
+
+*Disclaimer: Better-ZapFast is an independent, unofficial project and is not affiliated with, sponsored, or endorsed by WhatsApp LLC or Meta Platforms, Inc. Use at your own discretion.*
+
+## License
 
 Licensed under the [MIT License](LICENSE).
-
-## Star history
-
-<a href="https://www.star-history.com/?repos=crmne%2Fzapfast&amp;type=date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=crmne/zapfast&amp;type=date&amp;theme=dark">
-    <img alt="ZapFast GitHub stars over time" src="https://api.star-history.com/chart?repos=crmne/zapfast&amp;type=date">
-  </picture>
-</a>
