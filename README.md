@@ -1,4 +1,4 @@
-This fork adds [local file plugins](docs/local-plugins.md). Plugin-enabled Windows packages come from [BenOnur/zapfast releases](https://github.com/BenOnur/zapfast/releases/latest); stock upstream packages do not contain the extension host.
+This fork adds [local file plugins](docs/local-plugins.md). Plugin-enabled Windows packages come from [Better-ZapFast releases](https://github.com/BenOnur/Better-ZapFast/releases/latest); stock upstream packages do not contain the extension host.
 
 **Anti-Delete, Auto Responder, Notification Throttle, Quoter, Quick Stickers and bugfix** have a [separate repository, individual downloads and installation guide](https://github.com/BenOnur/zapfast-plugins). The first four work with fork v0.19.1 / API v2; Quick Stickers and current bugfix require the newer API v3 hooks documented there.
 

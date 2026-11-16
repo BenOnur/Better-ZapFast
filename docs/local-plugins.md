@@ -29,7 +29,7 @@ Host limits: 32 plugins, 128 KiB per file, 25,000 operations per callback, bound
 
 ## Updates and build footprint
 
-This fork uses `BenOnur/zapfast` releases and `assets/plugin-update-public-key.hex`, not upstream's signing key. The private key belongs in the repository secret `ZAPFAST_PLUGIN_UPDATE_SIGNING_KEY` and outside the source checkout. **Plugins Windows** performs the required Windows checks, builds a portable zip, signs its checksums, verifies them and optionally publishes a release. No Rust compiler is needed on the receiving machine.
+This fork uses `BenOnur/Better-ZapFast` releases and `assets/plugin-update-public-key.hex`, not upstream's signing key. The private key belongs in the repository secret `ZAPFAST_PLUGIN_UPDATE_SIGNING_KEY` and outside the source checkout. **Plugins Windows** performs the required Windows checks, builds a portable zip, signs its checksums, verifies them and optionally publishes a release. No Rust compiler is needed on the receiving machine.
 
 **Plugin upstream compatibility** previews upstream integration weekly without changing main or publishing binaries. A clean textual merge is not proof of compatibility: adaptation and full checks still precede each release. Official stock exe updates omit this host. The installed exe should live outside Cargo target directories. Local cache or compiler removal is a separate operation; this feature does not delete them automatically.
 

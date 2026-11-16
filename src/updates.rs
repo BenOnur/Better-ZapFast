@@ -26,7 +26,7 @@ pub const CONFIG: UpdateConfig = UpdateConfig {
     // This channel trusts only our plugin-build publisher, not stock binaries.
     additional_publisher_keys: &[],
     ..UpdateConfig::new(
-        "BenOnur/zapfast",
+        "BenOnur/Better-ZapFast",
         "ZapFast",
         "zapfast",
         env!("CARGO_PKG_VERSION"),
@@ -51,7 +51,7 @@ mod tests {
         CONFIG.validate().unwrap();
         assert_eq!(CONFIG.current_version, env!("CARGO_PKG_VERSION"));
         assert_eq!(CONFIG.slug, "zapfast");
-        assert_eq!(CONFIG.repository, "BenOnur/zapfast");
+        assert_eq!(CONFIG.repository, "BenOnur/Better-ZapFast");
         assert!(CONFIG.additional_publisher_keys.is_empty());
         assert_ne!(
             CONFIG.publisher_key.unwrap().trim(),
